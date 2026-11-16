@@ -20,7 +20,7 @@ A real-time license plate detection dashboard built with Python, Flask, and Easy
 ## 📁 Project Structure
 
 ```
-Giri Friend/
+VMS/
 ├── app.py              # Flask backend (API + OCR detection)
 ├── requirements.txt    # Python dependencies
 ├── run.bat             # One-click launcher (Windows)
