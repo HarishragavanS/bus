@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VehicleGate — Smart Entry Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:        #080c14;
+  --surface:   #0f1623;
+  --card:      #141d2e;
+  --border:    rgba(255,255,255,0.07);
+  --green:     #00e676;
+  --green-dim: rgba(0,230,118,0.12);
+  --red:       #ff3d3d;
+  --red-dim:   rgba(255,61,61,0.12);
+  --blue:      #2979ff;
+  --yellow:    #ffd600;
+  --text:      #e8eaf6;
+  --muted:     #6b7a99;
+  --radius:    14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, #2979ff, #00e676);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+.logo-text span { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.header-right { display: flex; align-items: center; gap: 20px; }
+#live-clock { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 14px; border-radius: 20px;
+  background: var(--green-dim); border: 1px solid var(--green);
+  font-size: 12px; font-weight: 600; color: var(--green);
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* ── LAYOUT ── */
+.main { padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
+
+/* ── STAT CARDS ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  display: flex; align-items: center; gap: 16px;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+}
+.stat-icon.green { background: var(--green-dim); }
+.stat-icon.red   { background: var(--red-dim); }
+.stat-icon.blue  { background: rgba(41,121,255,0.12); }
+.stat-icon.yellow{ background: rgba(255,214,0,0.12); }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+.stat-value { font-size: 28px; font-weight: 700; line-height: 1; }
+.stat-value.green  { color: var(--green); }
+.stat-value.red    { color: var(--red); }
+.stat-value.blue   { color: var(--blue); }
+.stat-value.yellow { color: var(--yellow); }
+
+/* ── MAIN GRID ── */
+.grid { display: grid; grid-template-columns: 420px 1fr; gap: 20px; }
+
+/* ── CAMERA + DETECTION ── */
+.left-col { display: flex; flex-direction: column; gap: 16px; }
+.camera-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.camera-card .card-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+#camera-feed { width: 100%; display: block; background: #000; min-height: 280px; }
+
+/* ── DETECTION CARD ── */
+.detection-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.detection-card.authorized  { border-color: var(--green); box-shadow: 0 0 24px rgba(0,230,118,0.15); }
+.detection-card.unauthorized{ border-color: var(--red);   box-shadow: 0 0 24px rgba(255,61,61,0.2); }
+.detection-card.unauthorized{ animation: threat-flash 0.5s ease 2; }
+@keyframes threat-flash {
+  0%,100%{ background: var(--card); }
+  50%    { background: rgba(255,61,61,0.08); }
+}
+.detection-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.detection-badge {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+}
+.badge-idle         { background: rgba(107,122,153,0.15); color: var(--muted); border: 1px solid var(--muted); }
+.badge-authorized   { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+.badge-unauthorized { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red); }
+.plate-number { font-size: 32px; font-weight: 800; letter-spacing: 3px; margin: 8px 0; }
+.detection-meta { font-size: 12px; color: var(--muted); }
+
+/* ── RIGHT COL ── */
+.right-col { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── ACTIVITY LOG ── */
+.log-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; flex: 1;
+}
+.card-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.log-body { max-height: 320px; overflow-y: auto; }
+.log-body::-webkit-scrollbar { width: 5px; }
+.log-body::-webkit-scrollbar-track { background: transparent; }
+.log-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.log-table thead th {
+  padding: 10px 14px; text-align: left;
+  color: var(--muted); font-weight: 500; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.7px;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--card);
+}
+.log-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+.log-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.log-table td { padding: 10px 14px; }
+.row-auth   td:first-child { border-left: 3px solid var(--green); }
+.row-unauth td:first-child { border-left: 3px solid var(--red); }
+.chip {
+  display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.chip-auth   { background: var(--green-dim); color: var(--green); }
+.chip-unauth { background: var(--red-dim);   color: var(--red); }
+.empty-log { text-align: center; color: var(--muted); padding: 40px; font-size: 13px; }
+
+/* ── ALLOWLIST CARD ── */
+.allowlist-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.allowlist-body { padding: 16px; }
+.add-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.add-row input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 9px 14px; color: var(--text);
+  font-family: inherit; font-size: 13px; outline: none;
+  transition: border-color 0.2s;
+}
+.add-row input:focus { border-color: var(--blue); }
+.add-row input::placeholder { color: var(--muted); }
+.btn {
+  padding: 9px 18px; border: none; border-radius: 8px;
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+}
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-add    { background: var(--blue);  color: #fff; }
+.btn-export { background: rgba(255,214,0,0.15); color: var(--yellow); border: 1px solid var(--yellow); }
+.btn-export:hover { background: rgba(255,214,0,0.25); }
+.plates-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.plate-tag {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600; letter-spacing: 1px;
+}
+.plate-remove {
+  background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px;
+  line-height: 1; padding: 0 2px; transition: color 0.15s;
+}
+.plate-remove:hover { color: var(--red); }
+
+/* ── ALERT BANNER ── */
+#alert-banner {
+  display: none; align-items: center; gap: 12px;
+  background: var(--red-dim); border: 1px solid var(--red);
+  border-radius: var(--radius); padding: 14px 20px;
+  color: var(--red); font-weight: 600;
+  animation: slide-in 0.3s ease;
+}
+#alert-banner.show { display: flex; }
+@keyframes slide-in { from{ opacity:0; transform: translateY(-8px); } to{ opacity:1; transform:none; } }
+
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚗</div>
+    <div class="logo-text">
+      <h1>VehicleGate</h1>
+      <span>Smart Entry Management</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="live-clock">--:--:--</span>
+    <div class="status-pill"><div class="status-dot"></div> SYSTEM LIVE</div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Alert Banner -->
+  <div id="alert-banner">⚠️ &nbsp; UNAUTHORIZED VEHICLE DETECTED — <span id="alert-plate"></span></div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div><div class="stat-label">Authorized</div><div class="stat-value green" id="stat-auth">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">🚫</div>
+      <div><div class="stat-label">Unauthorized</div><div class="stat-value red" id="stat-unauth">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon blue">📋</div>
+      <div><div class="stat-label">Total Scans</div><div class="stat-value blue" id="stat-total">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow">🛡️</div>
+      <div><div class="stat-label">Allowed Vehicles</div><div class="stat-value yellow" id="stat-allowed">0</div></div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid">
+
+    <!-- LEFT: Camera + Detection -->
+    <div class="left-col">
+      <div class="camera-card">
+        <div class="card-header">
+          <span class="card-title">🎥 Live Camera Feed</span>
+          <span style="font-size:11px;color:var(--muted)">MJPEG Stream</span>
+        </div>
+        <img id="camera-feed" src="/video_feed" alt="Live Camera Feed"/>
+      </div>
+
+      <div class="detection-card idle" id="detection-card">
+        <div class="detection-top">
+          <span class="card-title">🔍 Last Detection</span>
+          <span class="detection-badge badge-idle" id="status-badge">IDLE</span>
+        </div>
+        <div class="plate-number" id="plate-display">— — —</div>
+        <div class="detection-meta" id="detection-meta">Waiting for vehicle...</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Log + Allowlist -->
+    <div class="right-col">
+
+      <!-- Activity Log -->
+      <div class="log-card">
+        <div class="card-header">
+          <span class="card-title">📋 Activity Log</span>
+          <a href="/export_log" class="btn btn-export">⬇ Export CSV</a>
+        </div>
+        <div class="log-body">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>Plate</th><th>Date</th><th>Time</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="log-body">
+              <tr><td colspan="4" class="empty-log">No detections yet...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Allowlist Manager -->
+      <div class="allowlist-card">
+        <div class="card-header">
+          <span class="card-title">🛡️ Manage Allowlist</span>
+        </div>
+        <div class="allowlist-body">
+          <div class="add-row">
+            <input type="text" id="new-plate-input" placeholder="Enter plate number (e.g. TN09AB1234)" maxlength="12"/>
+            <button class="btn btn-add" onclick="addVehicle()">+ Add</button>
+          </div>
+          <div class="plates-list" id="plates-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Web Audio alert ──────────────────────────────────────────────────────────
+function playAlert() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.15, 0.3].forEach(t => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square'; o.frequency.value = 880;
+      g.gain.setValueAtTime(0.3, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.12);
+      o.start(ctx.currentTime + t);
+      o.stop(ctx.currentTime + t + 0.13);
+    });
+  } catch(e) {}
+}
+
+// ── Clock ────────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('live-clock').textContent =
+    new Date().toLocaleTimeString('en-IN', {hour12: false});
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ── State tracking ───────────────────────────────────────────────────────────
+let lastPlate = null;
+let alertTimeout = null;
+
+// ── Poll /status ─────────────────────────────────────────────────────────────
+async function pollStatus() {
+  try {
+    const data = await fetch('/status').then(r => r.json());
+    const card  = document.getElementById('detection-card');
+    const badge = document.getElementById('status-badge');
+    const plate = document.getElementById('plate-display');
+    const meta  = document.getElementById('detection-meta');
+
+    plate.textContent = data.plate || '— — —';
+    meta.textContent  = data.status !== 'IDLE'
+      ? `Detected on ${data.date} at ${data.time}`
+      : 'Waiting for vehicle...';
+
+    card.className  = 'detection-card';
+    badge.className = 'detection-badge';
+
+    if (data.status === 'AUTHORIZED') {
+      card.classList.add('authorized');
+      badge.classList.add('badge-authorized');
+      badge.textContent = '✅ AUTHORIZED';
+      hideAlert();
+    } else if (data.status === 'UNAUTHORIZED') {
+      card.classList.add('unauthorized');
+      badge.classList.add('badge-unauthorized');
+      badge.textContent = '🚫 UNAUTHORIZED';
+      if (data.plate !== lastPlate) {
+        showAlert(data.plate);
+        playAlert();
+      }
+    } else {
+      badge.classList.add('badge-idle');
+      badge.textContent = 'IDLE';
+    }
+    lastPlate = data.plate;
+  } catch(e) {}
+}
+
+// ── Poll /stats ───────────────────────────────────────────────────────────────
+async function pollStats() {
+  try {
+    const d = await fetch('/stats').then(r => r.json());
+    document.getElementById('stat-auth').textContent    = d.authorized;
+    document.getElementById('stat-unauth').textContent  = d.unauthorized;
+    document.getElementById('stat-total').textContent   = d.total;
+    document.getElementById('stat-allowed').textContent = d.allowed_count;
+  } catch(e) {}
+}
+
+// ── Poll /log ─────────────────────────────────────────────────────────────────
+async function pollLog() {
+  try {
+    const rows = await fetch('/log').then(r => r.json());
+    const tbody = document.getElementById('log-body');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-log">No detections yet...</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr class="${r.status === 'AUTHORIZED' ? 'row-auth' : 'row-unauth'}">
+        <td><strong>${r.plate}</strong></td>
+        <td style="color:var(--muted)">${r.date}</td>
+        <td style="color:var(--muted)">${r.time}</td>
+        <td><span class="chip ${r.status === 'AUTHORIZED' ? 'chip-auth' : 'chip-unauth'}">${r.status}</span></td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+// ── Poll /allowed_vehicles ────────────────────────────────────────────────────
+async function pollAllowed() {
+  try {
+    const list = await fetch('/allowed_vehicles').then(r => r.json());
+    const el = document.getElementById('plates-list');
+    el.innerHTML = list.map(p => `
+      <div class="plate-tag">
+        ${p}
+        <button class="plate-remove" onclick="removeVehicle('${p}')" title="Remove">✕</button>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+// ── Alert banner ──────────────────────────────────────────────────────────────
+function showAlert(plate) {
+  const b = document.getElementById('alert-banner');
+  document.getElementById('alert-plate').textContent = plate;
+  b.classList.add('show');
+  clearTimeout(alertTimeout);
+  alertTimeout = setTimeout(hideAlert, 6000);
+}
+function hideAlert() {
+  document.getElementById('alert-banner').classList.remove('show');
+}
+
+// ── Add vehicle ───────────────────────────────────────────────────────────────
+async function addVehicle() {
+  const inp = document.getElementById('new-plate-input');
+  const plate = inp.value.trim().toUpperCase();
+  if (!plate) return;
+  await fetch('/add_vehicle', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({plate})
+  });
+  inp.value = '';
+  pollAllowed(); pollStats();
+}
+
+document.getElementById('new-plate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addVehicle();
+});
+
+// ── Remove vehicle ────────────────────────────────────────────────────────────
+async function removeVehicle(plate) {
+  await fetch('/remove_vehicle', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({plate})
+  });
+  pollAllowed(); pollStats();
+}
+
+// ── Start polling ─────────────────────────────────────────────────────────────
+pollStatus(); pollStats(); pollLog(); pollAllowed();
+setInterval(pollStatus,  1000);
+setInterval(pollStats,   2000);
+setInterval(pollLog,     2000);
+setInterval(pollAllowed, 5000);
+</script>
+</body>
+</html>
