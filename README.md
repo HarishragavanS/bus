@@ -6,8 +6,10 @@ A real-time license plate detection dashboard built with Python, Flask, and Easy
 
 ## ✨ Features
 
-- 🎥 **Live Camera Stream** — Webcam feed streamed directly in the browser
-- 🔍 **OCR Plate Detection** — Reads plates in real-time using EasyOCR
+- 🔐 **Authentication & Security** — Login portal with secure password hashing and session management
+- 🎯 **Plate Localization (Haar + Morphological)** — Detects & isolates candidate plate bounding boxes before running OCR, eliminating background clutter
+- 🎥 **Live Camera Stream** — Webcam feed with real-time localized bounding boxes & status HUD
+- 🔍 **Targeted OCR Detection** — High-accuracy character recognition on cropped, preprocessed plate ROIs
 - ✅ **Authorized / 🚫 Unauthorized Detection** — Instantly flags unknown vehicles
 - 🔔 **Alert System** — Flashing banner + audio alert on unauthorized detection
 - 📋 **Activity Log** — Scrollable, color-coded history of all detections
@@ -20,13 +22,23 @@ A real-time license plate detection dashboard built with Python, Flask, and Easy
 ## 📁 Project Structure
 
 ```
-VMS/
+Giri Friend/
 ├── app.py              # Flask backend (API + OCR detection)
 ├── requirements.txt    # Python dependencies
 ├── run.bat             # One-click launcher (Windows)
 └── templates/
-    └── index.html      # Premium dark dashboard UI
+    ├── index.html      # Premium dark dashboard UI
+    └── login.html      # Sleek security portal authentication UI
 ```
+
+---
+
+## 🔐 Default Credentials
+
+| Username | Password | Role |
+|---|---|---|
+| `admin` | `admin123` | Administrator (Full access) |
+| `guard` | `guard123` | Security Guard (Gate operations) |
 
 ---
 

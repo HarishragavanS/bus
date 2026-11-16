@@ -1,36 +1,45 @@
 @echo off
-title VehicleGate — Starting System
+:: Ensure working directory is the script's folder
+cd /d "%~dp0"
+
+title VehicleGate - Smart Vehicle Entry System
 
 echo.
-echo  =============================================
+echo =============================================
 echo   VehicleGate - Smart Vehicle Entry System
-echo  =============================================
+echo =============================================
 echo.
 
 :: Check if virtual environment exists, create if not
-IF NOT EXIST "venv\Scripts\activate.bat" (
-    echo [1/3] Creating virtual environment...
+if not exist "venv\Scripts\activate.bat" (
+    echo [1/2] Creating virtual environment...
     python -m venv venv
-    echo       Done.
-) ELSE (
-    echo [1/3] Virtual environment found.
+    if errorlevel 1 (
+        echo [ERROR] Failed to create virtual environment. Ensure Python is installed and added to PATH.
+        pause
+        exit /b 1
+    )
+    echo       Virtual environment created.
+    echo       Installing requirements...
+    call venv\Scripts\activate.bat
+    pip install -r requirements.txt
+) else (
+    echo [1/2] Virtual environment found.
+    call venv\Scripts\activate.bat
 )
 
-:: Activate virtual environment
-echo [2/3] Activating virtual environment...
-call venv\Scripts\activate.bat
-
-:: Install dependencies
-echo [3/3] Installing dependencies...
-pip install -r requirements.txt --quiet
-
+echo [2/2] Starting application...
 echo.
-echo  System is starting...
-echo  Open your browser at: http://localhost:5000
-echo  Press CTRL+C to stop.
+echo System is starting at: http://localhost:5000
+echo Press CTRL+C to stop.
 echo.
 
-:: Run the app
+:: Run app.py using the activated virtual environment
 python app.py
+
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Application exited with an error.
+)
 
 pause

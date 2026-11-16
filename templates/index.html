@@ -49,7 +49,7 @@ header {
 }
 .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
 .logo-text span { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-.header-right { display: flex; align-items: center; gap: 20px; }
+.header-right { display: flex; align-items: center; gap: 16px; }
 #live-clock { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--muted); }
 .status-pill {
   display: flex; align-items: center; gap: 7px;
@@ -63,6 +63,24 @@ header {
   animation: pulse 1.5s infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+.user-badge {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 13px; border-radius: 20px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; color: var(--text);
+}
+.btn-logout {
+  background: rgba(255, 61, 61, 0.12);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 61, 61, 0.3);
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; padding: 6px 14px;
+}
+.btn-logout:hover {
+  background: rgba(255, 61, 61, 0.25);
+  color: #ffffff;
+}
 
 /* ── LAYOUT ── */
 .main { padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
@@ -233,6 +251,11 @@ header {
   <div class="header-right">
     <span id="live-clock">--:--:--</span>
     <div class="status-pill"><div class="status-dot"></div> SYSTEM LIVE</div>
+    <div class="user-badge" title="Logged in user">
+      <span>👤</span>
+      <span>{{ current_user or 'admin' }}</span>
+    </div>
+    <a href="/logout" class="btn btn-logout" title="Sign out of system">🚪 Sign Out</a>
   </div>
 </header>
 
@@ -357,7 +380,9 @@ let alertTimeout = null;
 // ── Poll /status ─────────────────────────────────────────────────────────────
 async function pollStatus() {
   try {
-    const data = await fetch('/status').then(r => r.json());
+    const res = await fetch('/status');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
     const card  = document.getElementById('detection-card');
     const badge = document.getElementById('status-badge');
     const plate = document.getElementById('plate-display');
@@ -395,7 +420,9 @@ async function pollStatus() {
 // ── Poll /stats ───────────────────────────────────────────────────────────────
 async function pollStats() {
   try {
-    const d = await fetch('/stats').then(r => r.json());
+    const res = await fetch('/stats');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const d = await res.json();
     document.getElementById('stat-auth').textContent    = d.authorized;
     document.getElementById('stat-unauth').textContent  = d.unauthorized;
     document.getElementById('stat-total').textContent   = d.total;
@@ -406,7 +433,9 @@ async function pollStats() {
 // ── Poll /log ─────────────────────────────────────────────────────────────────
 async function pollLog() {
   try {
-    const rows = await fetch('/log').then(r => r.json());
+    const res = await fetch('/log');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const rows = await res.json();
     const tbody = document.getElementById('log-body');
     if (!rows.length) {
       tbody.innerHTML = '<tr><td colspan="4" class="empty-log">No detections yet...</td></tr>';
@@ -425,7 +454,9 @@ async function pollLog() {
 // ── Poll /allowed_vehicles ────────────────────────────────────────────────────
 async function pollAllowed() {
   try {
-    const list = await fetch('/allowed_vehicles').then(r => r.json());
+    const res = await fetch('/allowed_vehicles');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const list = await res.json();
     const el = document.getElementById('plates-list');
     el.innerHTML = list.map(p => `
       <div class="plate-tag">
