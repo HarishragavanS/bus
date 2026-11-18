@@ -333,6 +333,8 @@ def _camera_thread():
     OCR queue (non-blocking so the queue never accumulates stale frames), and
     overlays HUD graphics before writing to the shared MJPEG buffer.
     """
+    global latest_frame
+
     cap = cv2.VideoCapture(0)
 
     # Reduce resolution to 640×480 — plenty for plate detection, cuts CPU load

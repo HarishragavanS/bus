@@ -19,9 +19,8 @@ sudo apt-get update -qq
 sudo apt-get install -y \
     python3-pip \
     python3-venv \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
-    libatlas-base-dev \
     libopenblas-dev \
     v4l-utils \
     ffmpeg
@@ -37,6 +36,9 @@ fi
 echo "[3/4] Installing Python packages..."
 source venv/bin/activate
 pip install --upgrade pip --quiet
+pip install --index-url https://download.pytorch.org/whl/cpu \
+    "torch==2.15.0+cpu" \
+    "torchvision==0.29.2+cpu"
 pip install -r requirements.txt
 
 echo "[4/4] Verifying camera device..."

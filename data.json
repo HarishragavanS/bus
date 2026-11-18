@@ -1,0 +1,100 @@
+{
+  "allowed_vehicles": [
+    "TN09AB1234",
+    "TN10XY5678",
+    "TN82Y8388"
+  ],
+  "activity_log": [
+    {
+      "plate": "TN14N8675",
+      "time": "23:41:28",
+      "date": "2026-11-18",
+      "status": "UNAUTHORIZED",
+      "bbox": [
+        118,
+        362,
+        269,
+        90
+      ],
+      "bbox_time": 1795025488.1587753
+    },
+    {
+      "plate": "ABC123",
+      "time": "23:41:05",
+      "date": "2026-11-18",
+      "status": "UNAUTHORIZED",
+      "bbox": [
+        95,
+        220,
+        403,
+        115
+      ],
+      "bbox_time": 1795025465.0781426
+    },
+    {
+      "plate": "ABC13",
+      "time": "23:40:22",
+      "date": "2026-11-18",
+      "status": "UNAUTHORIZED",
+      "bbox": [
+        12,
+        168,
+        628,
+        169
+      ],
+      "bbox_time": 1795025422.7838879
+    },
+    {
+      "plate": "TN14N",
+      "time": "23:40:04",
+      "date": "2026-11-18",
+      "status": "UNAUTHORIZED",
+      "bbox": [
+        124,
+        292,
+        351,
+        117
+      ],
+      "bbox_time": 1795025404.900972
+    },
+    {
+      "plate": "TN82Y8388",
+      "time": "23:39:48",
+      "date": "2026-11-18",
+      "status": "AUTHORIZED",
+      "bbox": [
+        48,
+        183,
+        519,
+        173
+      ],
+      "bbox_time": 1795025388.0843577
+    },
+    {
+      "plate": "TN82Y8388",
+      "time": "23:39:01",
+      "date": "2026-11-18",
+      "status": "AUTHORIZED",
+      "bbox": [
+        126,
+        277,
+        514,
+        133
+      ],
+      "bbox_time": 1795025341.8434842
+    },
+    {
+      "plate": "TN82Y",
+      "time": "23:38:44",
+      "date": "2026-11-18",
+      "status": "UNAUTHORIZED",
+      "bbox": [
+        91,
+        183,
+        490,
+        157
+      ],
+      "bbox_time": 1795025324.0613365
+    }
+  ]
+}
