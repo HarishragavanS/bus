@@ -1,3 +1,4 @@
 Flask
-opencv-python
+opencv-python-headless
 easyocr
+RPi.GPIO; platform_machine == "armv7l" or platform_machine == "aarch64"
